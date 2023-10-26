@@ -1,0 +1,149 @@
+org: nikhilweb
+app: budventurepracticalexam
+service: budventurepracticalexam
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  environment:
+    region: ap-south-1
+    accountId: 662359371464
+    stage: ${opt:stage, 'dev'}
+    PROJECT_NAME: ${self:custom.variables.PROJECT_NAME}
+    TABLE_USER: ${self:custom.variables.TABLE_USER}
+    TABLE_EMPLOYEE: ${self:custom.variables.TABLE_EMPLOYEE}
+
+  apiGateway:
+    shouldStartNameWithService: true
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:UpdateItem
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - sns:Publish
+            - sns:CreatePlatformEndpoint
+          Resource: "*"
+
+functions:
+  userAuthorizerFunc:
+    handler: src/helpers/userAuthorizer.userAuthorizer
+
+  api:
+    handler: index.handler
+    events:
+      - httpApi:
+          path: /
+          method: get
+
+  signup:
+    handler: src/auth/signup.handler
+    events:
+      - http:
+          path: /user/signup
+          method: post
+          cors: true
+
+  login:
+    handler: src/auth/login.login
+    events:
+      - http:
+          path: /user/login
+          method: post
+          cors: true
+
+  #employees
+  createEmployee:
+    handler: src/employee/createEmployee.createEmployee
+    events:
+      - http:
+          path: /user/employee/add
+          method: post
+          authorizer: userAuthorizerFunc
+          cors: true
+
+  getemployees:
+    handler: src/employee/getEmployees.getEmployees
+    events:
+      - http:
+          path: /user/employee/
+          method: get
+          authorizer: userAuthorizerFunc
+          cors: true
+
+  deleteemployee:
+    handler: src/employee/deleteEmployee.deleteEmployee
+    events:
+      - http:
+          path: /user/employee/{employeeid}
+          method: delete
+          authorizer: userAuthorizerFunc
+          cors: true
+
+  updateemployee:
+    handler: src/employee/updateEmployee.updateEmployee
+    events:
+      - http:
+          path: /user/employee/{employeeid}
+          method: put
+          authorizer: userAuthorizerFunc
+          cors: true
+
+resources:
+  Resources:
+    # users table
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.variables.TABLE_USER}
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    #employees table
+    employeesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.variables.TABLE_EMPLOYEE}
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+custom:
+  variables:
+    PROJECT_NAME: budventurepracticalexam
+    TABLE_USER: budventurepracticalexam-users-${opt:stage, 'dev'}
+    TABLE_EMPLOYEE: budventurepracticalexam-employee-${opt:stage, 'dev'}
+
+package:
+  exclude:
+    - node_modules/**
