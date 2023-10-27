@@ -1,8 +1,7 @@
 "use strict";
 import Joi from "joi";
-import response from "../helpers/response.helper";
-import { ddbDocClient } from "../helpers/ddbclient.helper";
 import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { ddbDocClient } from "../helpers/ddbclient.helper";
 export async function handler(event) {
   try {
     // Validate the JSON body
@@ -14,13 +13,23 @@ export async function handler(event) {
 
     if (body == null) {
       //check if a body is present
-      return response(400, { error: "Bad Request" });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: "bad request",
+        }),
+      };
     }
     let value;
     try {
       value = await signUpSchema.validateAsync(body);
     } catch (err) {
-      return response(500, { message: err.details });
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          message: "validation error",
+        }),
+      };
     }
 
     if (value.email !== null) {
@@ -36,7 +45,12 @@ export async function handler(event) {
       );
       console.log("existingUser", existingUser);
       if (existingUser.Item !== undefined) {
-        return response(500, { message: "aleadry exist" });
+        return {
+          statusCode: 500,
+          body: JSON.stringify({
+            message: "Already exist",
+          }),
+        };
       } else {
         const insertData = {
           TableName: process.env.TABLE_USER,
@@ -47,12 +61,20 @@ export async function handler(event) {
           },
         };
         await ddbDocClient.send(new PutCommand(insertData));
-        return response(200, { data: "sign up success" });
+        return {
+          statusCode: 200,
+          body: JSON.stringify({
+            message: "success",
+          }),
+        };
       }
     }
   } catch (error) {
-    return response(400, {
-      message: error,
-    });
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: error,
+      }),
+    };
   }
 }

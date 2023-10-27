@@ -1,8 +1,7 @@
 "use strict";
-import response from "../helpers/response.helper";
-import { ddbDocClient } from "../helpers/ddbclient.helper";
 import jwt from "jsonwebtoken";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
+import { ddbDocClient } from "../helpers/ddbclient.helper";
 
 export async function login(event) {
   try {
@@ -10,7 +9,12 @@ export async function login(event) {
 
     if (body == null) {
       //check if a body is present
-      return response(400, { message: "Bad Request" });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: "bad request",
+        }),
+      };
     }
     const params = {
       TableName: process.env.TABLE_USER,
@@ -22,7 +26,12 @@ export async function login(event) {
 
     const user = await ddbDocClient.send(new GetCommand(params));
     if (user.Item == undefined) {
-      return response(404, { message: "User not found" });
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          message: "User not found",
+        }),
+      };
     } else {
       const secret = "test";
       const params = { email: user.Item.SK, password: user.Item.PK };
@@ -33,11 +42,19 @@ export async function login(event) {
         email: body.email,
         token: token,
       };
-      return response(200, responseData);
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          responseData,
+        }),
+      };
     }
-  } catch (err) {
-    return response(400, {
-      message: "network Error",
-    });
+  } catch (error) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: error,
+      }),
+    };
   }
 }

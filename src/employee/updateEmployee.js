@@ -1,5 +1,5 @@
 "use strict";
-import response from "../../helpers/response.helper";
+
 import Joi from "joi";
 import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from "../../helpers/ddbclient.helper";
@@ -15,14 +15,24 @@ export async function updateEmployee(event) {
     const body = JSON.parse(event.body);
     console.log(body);
     if (body == null) {
-      return response(400, { message: "Bad request" });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: " error",
+        }),
+      };
     }
 
     let value;
     try {
       value = await employeeSchema.validateAsync(body);
     } catch (err) {
-      return response(500, { message: "validation error" });
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          message: "validation error",
+        }),
+      };
     }
     if (employeeID !== null) {
       const params = {
@@ -36,9 +46,13 @@ export async function updateEmployee(event) {
 
       console.log("existingemployee", existingemployee);
       if (existingemployee.Item === undefined) {
-        return response(500, { message: "employee doesn't exist" });
+        return {
+          statusCode: 500,
+          body: JSON.stringify({
+            message: "employee doesnt exist",
+          }),
+        };
       } else {
-       
         const insertData = {
           TableName: process.env.TABLE_EMPLOYEE,
           Key: {
@@ -60,13 +74,21 @@ export async function updateEmployee(event) {
         console.log("insertData", insertData);
         return ddbDocClient.send(new UpdateCommand(insertData)).then((data) => {
           console.log(data);
-          return response(200, data);
+          return {
+            statusCode: 200,
+            body: JSON.stringify({
+              data,
+            }),
+          };
         });
       }
     }
   } catch (error) {
-    return response(400, {
-      message: error,
-    });
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: error,
+      }),
+    };
   }
 }

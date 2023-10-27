@@ -1,5 +1,5 @@
 "use strict";
-import response from "../../helpers/response.helper";
+
 import { DeleteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from "../../helpers/ddbclient.helper";
 
@@ -19,7 +19,12 @@ export async function deleteEmployee(event) {
       console.log("existingemployee", existingemployee);
 
       if (existingemployee.Item === undefined) {
-        return response(500, { message: "employee doesn't exist" });
+        return {
+          statusCode: 500,
+          body: JSON.stringify({
+            message: "employee doesnt exist",
+          }),
+        };
       } else {
         const deleteData = {
           TableName: process.env.TABLE_EMPLOYEE,
@@ -32,17 +37,30 @@ export async function deleteEmployee(event) {
           .send(new DeleteCommand(deleteData))
           .then((data) => {
             console.log(data);
-            return response(200, { message: "Deleted succesfully" });
+            return {
+              statusCode: 200,
+              body: JSON.stringify({
+                message: "delete success",
+              }),
+            };
           })
           .catch((err) => {
             console.log(err);
-            return response(500, { message: err });
+            return {
+              statusCode: 400,
+              body: JSON.stringify({
+                message: err,
+              }),
+            };
           });
       }
     }
   } catch (error) {
-    return response(400, {
-      message: { message: error },
-    });
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: error,
+      }),
+    };
   }
 }

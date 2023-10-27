@@ -1,5 +1,4 @@
 "use strict";
-import response from "../../helpers/response.helper";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from "../../helpers/ddbclient.helper";
 
@@ -17,10 +16,18 @@ export async function getemployeees() {
     };
 
     const employeees = await ddbDocClient.send(new QueryCommand(params));
-    return response(200, { data: employeees });
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        data: employeees,
+      }),
+    };
   } catch (error) {
-    return response(400, {
-      message: error,
-    });
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: error,
+      }),
+    };
   }
 }

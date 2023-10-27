@@ -1,5 +1,5 @@
 "use strict";
-import response from "../../helpers/response.helper";
+
 import Joi from "joi";
 import { v4 as uuidv4 } from "uuid";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
@@ -15,14 +15,24 @@ export async function createEmployee(event) {
     const body = JSON.parse(event.body);
     console.log(body);
     if (body == null) {
-      return response(400, { message: "Bad request" });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: " error",
+        }),
+      };
     }
 
     let value;
     try {
       value = await employeeSchema.validateAsync(body);
     } catch (err) {
-      return response(500, { message: "validation error" });
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          message: "validation error",
+        }),
+      };
     }
     console.log(value);
     if (value.employeeName !== null) {
@@ -39,12 +49,20 @@ export async function createEmployee(event) {
       console.log("insertData", insertData);
       return ddbDocClient.send(new PutCommand(insertData)).then((data) => {
         console.log(data);
-        return response(200, data);
+        return {
+          statusCode: 200,
+          body: JSON.stringify({
+            data,
+          }),
+        };
       });
     }
   } catch (error) {
-    return response(400, {
-      message: error,
-    });
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: error,
+      }),
+    };
   }
 }
