@@ -5,10 +5,12 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb";
 
 export async function deleteEmployee(event) {
-  const client = new DynamoDBClient({});
 
-  const dynamo = DynamoDBDocumentClient.from(client);
-
+    // Create a DynamoDB client.
+    const client = new DynamoDBClient({});
+    // Create a DynamoDB Document Client from the base client.
+    const dynamo = DynamoDBDocumentClient.from(client);
+  
   try {
     let employeeID = event.pathParameters.employeeid;
 
@@ -20,6 +22,8 @@ export async function deleteEmployee(event) {
           SK: employeeID,
         },
       };
+
+      //check employee exist
       const existingemployee = await dynamo.send(new GetCommand(params));
       console.log("existingemployee", existingemployee);
 
@@ -38,6 +42,8 @@ export async function deleteEmployee(event) {
             SK: employeeID,
           },
         };
+
+        //delete the employee
         return dynamo
           .send(new DeleteCommand(deleteData))
           .then((data) => {
@@ -61,6 +67,7 @@ export async function deleteEmployee(event) {
       }
     }
   } catch (error) {
+     // If any other error occurs, return a 400 status code with an error message.
     return {
       statusCode: 400,
       body: JSON.stringify({

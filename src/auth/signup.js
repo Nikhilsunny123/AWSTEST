@@ -2,13 +2,13 @@
 
 import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 
-import { DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 export async function handler(event) {
-
+  // Create a DynamoDB client.
   const client = new DynamoDBClient({});
-
+  // Create a DynamoDB Document Client from the base client.
   const dynamo = DynamoDBDocumentClient.from(client);
 
   try {
@@ -32,9 +32,9 @@ export async function handler(event) {
           SK: body.email,
         },
       };
-      const existingUser = await dynamo.send(
-        new GetCommand(paramToCheck)
-      );
+
+      //check user exist
+      const existingUser = await dynamo.send(new GetCommand(paramToCheck));
       console.log("existingUser", existingUser);
       if (existingUser.Item !== undefined) {
         return {
@@ -52,6 +52,7 @@ export async function handler(event) {
             password: body.password,
           },
         };
+        //create new user
         await dynamo.send(new PutCommand(insertData));
         return {
           statusCode: 200,

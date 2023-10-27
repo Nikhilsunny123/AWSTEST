@@ -6,6 +6,7 @@ export async function userAuthorizer(event) {
   const bearerToken = event.authorizationToken;
   const token = bearerToken.split(" ")[1];
   console.log(JSON.stringify(event));
+  console.log(token);
   try {
     // Verify JWT
     const decoded = JWT.verify(token, "test");
@@ -19,9 +20,7 @@ export async function userAuthorizer(event) {
 
     const userId = user.email;
 
-    const authorizerContext = { user: JSON.stringify(user) };
-    // Return an IAM policy document for the current endpoint
-
+   
     const policy = {
       principalId: userId,
       policyDocument: {
@@ -34,7 +33,6 @@ export async function userAuthorizer(event) {
           },
         ],
       },
-      authorizerContext,
     };
     const policyDocument = policy;
     console.log(policyDocument);

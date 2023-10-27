@@ -5,10 +5,12 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 export async function login(event) {
-  const client = new DynamoDBClient({});
 
-  const dynamo = DynamoDBDocumentClient.from(client);
-
+    // Create a DynamoDB client.
+    const client = new DynamoDBClient({});
+    // Create a DynamoDB Document Client from the base client.
+    const dynamo = DynamoDBDocumentClient.from(client);
+  
   try {
     const body = JSON.parse(event.body);
 
@@ -29,6 +31,7 @@ export async function login(event) {
       },
     };
 
+    //check user exist 
     const user = await dynamo.send(new GetCommand(params));
     if (user.Item == undefined) {
       return {
@@ -37,21 +40,32 @@ export async function login(event) {
           message: "User not found",
         }),
       };
-    } else {
+    }
+    console.log(user,user.Item.password == body.password);
+
+    //verify the password
+    if (user.Item.password == body.password) {
       const secret = "test";
-      const params = { email: user.Item.SK, role: user.Item.PK };
+      const params = { email: user.Item.SK, role: "user" };
       console.log(params);
       const token = jwt.sign({ params }, secret, { expiresIn: "60 days" });
       const responseData = {
         message: "Verification successful",
         email: body.email,
-        role: role,
+        role: "user",
         token: token,
       };
       return {
-        statusCode: 404,
+        statusCode: 200,
         body: JSON.stringify({
           responseData,
+        }),
+      };
+    } else {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          message: "wrong password",
         }),
       };
     }
