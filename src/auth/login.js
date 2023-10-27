@@ -1,9 +1,14 @@
 "use strict";
 import jwt from "jsonwebtoken";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import { ddbDocClient } from "../helpers/ddbclient.helper";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 export async function login(event) {
+  const client = new DynamoDBClient({});
+
+  const dynamo = DynamoDBDocumentClient.from(client);
+
   try {
     const body = JSON.parse(event.body);
 
@@ -24,7 +29,7 @@ export async function login(event) {
       },
     };
 
-    const user = await ddbDocClient.send(new GetCommand(params));
+    const user = await dynamo.send(new GetCommand(params));
     if (user.Item == undefined) {
       return {
         statusCode: 404,
@@ -34,12 +39,13 @@ export async function login(event) {
       };
     } else {
       const secret = "test";
-      const params = { email: user.Item.SK, password: user.Item.PK };
+      const params = { email: user.Item.SK, role: user.Item.PK };
       console.log(params);
       const token = jwt.sign({ params }, secret, { expiresIn: "60 days" });
       const responseData = {
         message: "Verification successful",
         email: body.email,
+        role: role,
         token: token,
       };
       return {

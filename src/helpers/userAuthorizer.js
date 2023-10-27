@@ -1,7 +1,6 @@
 "use strict";
 
 import JWT from "jsonwebtoken";
-import buildIAMPolicy from "./buildIAMPolicy";
 
 export async function userAuthorizer(event) {
   const bearerToken = event.authorizationToken;
@@ -13,7 +12,7 @@ export async function userAuthorizer(event) {
 
     const user = decoded.params;
 
-    let effect="Deny";
+    let effect = "Deny";
     if (user.role === "user") {
       effect = "Allow";
     }
@@ -22,12 +21,23 @@ export async function userAuthorizer(event) {
 
     const authorizerContext = { user: JSON.stringify(user) };
     // Return an IAM policy document for the current endpoint
-    const policyDocument = buildIAMPolicy(
-      userId,
-      effect,
-      event.methodArn,
-      authorizerContext
-    );
+
+    const policy = {
+      principalId: userId,
+      policyDocument: {
+        Version: "2012-10-17",
+        Statement: [
+          {
+            Action: "execute-api:Invoke",
+            Effect: effect,
+            Resource: "*",
+          },
+        ],
+      },
+      authorizerContext,
+    };
+    const policyDocument = policy;
+    console.log(policyDocument);
     return policyDocument;
   } catch (e) {
     return "Unauthorized";

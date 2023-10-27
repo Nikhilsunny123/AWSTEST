@@ -1,8 +1,14 @@
 "use strict";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { ddbDocClient } from "../../helpers/ddbclient.helper";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb";
 
 export async function getemployeees() {
+
+  const client = new DynamoDBClient({});
+
+  const dynamo = DynamoDBDocumentClient.from(client);
+
   try {
     const params = {
       TableName: process.env.TABLE_EMPLOYEE,
@@ -15,7 +21,7 @@ export async function getemployeees() {
       },
     };
 
-    const employeees = await ddbDocClient.send(new QueryCommand(params));
+    const employeees = await dynamo.send(new QueryCommand(params));
     return {
       statusCode: 200,
       body: JSON.stringify({

@@ -1,4 +1,4 @@
-const buildIAMPolicy = (userId, effect, resource, context) => {
+const buildIAMPolicy = (userId, effect, context) => {
     const policy = {
       principalId: userId,
       policyDocument: {

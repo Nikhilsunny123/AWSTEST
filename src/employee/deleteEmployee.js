@@ -1,9 +1,14 @@
 "use strict";
 
 import { DeleteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
-import { ddbDocClient } from "../../helpers/ddbclient.helper";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb";
 
 export async function deleteEmployee(event) {
+  const client = new DynamoDBClient({});
+
+  const dynamo = DynamoDBDocumentClient.from(client);
+
   try {
     let employeeID = event.pathParameters.employeeid;
 
@@ -15,7 +20,7 @@ export async function deleteEmployee(event) {
           SK: employeeID,
         },
       };
-      const existingemployee = await ddbDocClient.send(new GetCommand(params));
+      const existingemployee = await dynamo.send(new GetCommand(params));
       console.log("existingemployee", existingemployee);
 
       if (existingemployee.Item === undefined) {
@@ -33,7 +38,7 @@ export async function deleteEmployee(event) {
             SK: employeeID,
           },
         };
-        return ddbDocClient
+        return dynamo
           .send(new DeleteCommand(deleteData))
           .then((data) => {
             console.log(data);

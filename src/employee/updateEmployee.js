@@ -2,9 +2,15 @@
 
 import Joi from "joi";
 import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { ddbDocClient } from "../../helpers/ddbclient.helper";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb";
 
 export async function updateEmployee(event) {
+
+  const client = new DynamoDBClient({});
+
+  const dynamo = DynamoDBDocumentClient.from(client);
+
   try {
     const employeeSchema = Joi.object({
       employeeName: Joi.string().required(),
@@ -42,7 +48,7 @@ export async function updateEmployee(event) {
           SK: employeeID,
         },
       };
-      const existingemployee = await ddbDocClient.send(new GetCommand(params));
+      const existingemployee = await dynamo.send(new GetCommand(params));
 
       console.log("existingemployee", existingemployee);
       if (existingemployee.Item === undefined) {
@@ -72,7 +78,7 @@ export async function updateEmployee(event) {
           ReturnValues: "ALL_NEW",
         };
         console.log("insertData", insertData);
-        return ddbDocClient.send(new UpdateCommand(insertData)).then((data) => {
+        return dynamo.send(new UpdateCommand(insertData)).then((data) => {
           console.log(data);
           return {
             statusCode: 200,

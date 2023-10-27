@@ -3,9 +3,15 @@
 import Joi from "joi";
 import { v4 as uuidv4 } from "uuid";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
-import { ddbDocClient } from "../../helpers/ddbclient.helper";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb";
 
 export async function createEmployee(event) {
+
+  const client = new DynamoDBClient({});
+
+  const dynamo = DynamoDBDocumentClient.from(client);
+
   try {
     const employeeSchema = Joi.object({
       employeeName: Joi.string().required(),
@@ -47,7 +53,7 @@ export async function createEmployee(event) {
         },
       };
       console.log("insertData", insertData);
-      return ddbDocClient.send(new PutCommand(insertData)).then((data) => {
+      return dynamo.send(new PutCommand(insertData)).then((data) => {
         console.log(data);
         return {
           statusCode: 200,

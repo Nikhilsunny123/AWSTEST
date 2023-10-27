@@ -1,14 +1,17 @@
 "use strict";
-import Joi from "joi";
+
 import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { ddbDocClient } from "../helpers/ddbclient.helper";
+
+import { DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb";
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 export async function handler(event) {
+
+  const client = new DynamoDBClient({});
+
+  const dynamo = DynamoDBDocumentClient.from(client);
+
   try {
-    // Validate the JSON body
-    const signUpSchema = Joi.object({
-      email: Joi.string().required(),
-      password: Joi.string().min(10).required(),
-    });
     const body = JSON.parse(event.body);
 
     if (body == null) {
@@ -20,27 +23,16 @@ export async function handler(event) {
         }),
       };
     }
-    let value;
-    try {
-      value = await signUpSchema.validateAsync(body);
-    } catch (err) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          message: "validation error",
-        }),
-      };
-    }
 
-    if (value.email !== null) {
+    if (body.email !== null) {
       const paramToCheck = {
         TableName: process.env.TABLE_USER,
         Key: {
           PK: "user",
-          SK: value.email,
+          SK: body.email,
         },
       };
-      const existingUser = await ddbDocClient.send(
+      const existingUser = await dynamo.send(
         new GetCommand(paramToCheck)
       );
       console.log("existingUser", existingUser);
@@ -56,11 +48,11 @@ export async function handler(event) {
           TableName: process.env.TABLE_USER,
           Item: {
             PK: "user",
-            SK: value.email,
-            password: password,
+            SK: body.email,
+            password: body.password,
           },
         };
-        await ddbDocClient.send(new PutCommand(insertData));
+        await dynamo.send(new PutCommand(insertData));
         return {
           statusCode: 200,
           body: JSON.stringify({
